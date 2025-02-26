@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load roster_extras %}
+
+{% block extra_head %}
+<style>
+    .member-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 1rem;
+    }
+    .member-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: 1px solid var(--main-blue);
+    }
+    .member-profile {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .profile-picture {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 1rem;
+        border: 2px solid var(--main-blue);
+    }
+    .profile-picture.default {
+        background: var(--main-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: var(--text-color);
+    }
+    .member-info {
+        margin-bottom: 1rem;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .btn-email {
+        background-color: var(--main-blue);
+        border: none;
+        color: var(--text-color);
+    }
+    .btn-email:hover {
+        background-color: var(--link-hover);
+        color: white;
+    }
+    .member-photo-container {
+        position: relative;
+    }
+    .member-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 1rem;
+        border: 2px solid var(--main-blue);
+    }
+    .placeholder-photo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--main-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: var(--text-color);
+    }
+    .online-status {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--online-status);
+    }
+    .online {
+        background-color: var(--online-status);
+    }
+    .offline {
+        background-color: var(--offline-status);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Choir Members</h2>
+    <div class="member-grid">
+        {% for member in members %}
+            <div class="member-card">
+                <div class="member-photo-container">
+                    {% if member.profile_picture %}
+                        <img src="{{ member.profile_picture.url }}" alt="{{ member.user.get_full_name }}" class="member-photo">
+                    {% else %}
+                        <div class="placeholder-photo">
+                            {{ member.user.first_name|first }}{{ member.user.last_name|first }}
+                        </div>
+                    {% endif %}
+                    <div class="online-status {% if member.is_online %}online{% endif %}"></div>
+                </div>
+                <div class="member-info">
+                    <h3 class="member-name">{{ member.user.first_name }} {{ member.user.last_name }}</h3>
+                    <p>Voice Part: {{ member.get_voice_part_display|default:"Not set" }}</p>
+                    {% if member.phone_number %}
+                        <p>Phone: {{ member.phone_number }}</p>
+                    {% endif %}
+                    <div class="contact-container">
+                        <button class="contact-button" onclick="toggleContactMenu(this)">
+                            Contact {{ member.user.first_name }}
+                        </button>
+                        <div class="contact-menu">
+                            <a href="{% url 'roster:chat' member.id %}" class="contact-option">
+                                <i class="fas fa-comments"></i> Chat
+                            </a>
+                            <a href="mailto:{{ member.user.email }}" class="contact-option">
+                                <i class="fas fa-envelope"></i> Email
+                            </a>
+                            {% if member.phone_number %}
+                            <a href="sms:{{ member.phone_number }}" class="contact-option">
+                                <i class="fas fa-sms"></i> SMS
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p>No choir members found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleContactMenu(button) {
+    const menu = button.nextElementSibling;
+    const isVisible = menu.classList.contains('show');
+    
+    // Hide all menus first
+    document.querySelectorAll('.contact-menu').forEach(m => {
+        m.classList.remove('show');
+    });
+    
+    // Toggle this menu
+    if (!isVisible) {
+        menu.classList.add('show');
+    }
+}
+</script>
+{% endblock %} 
